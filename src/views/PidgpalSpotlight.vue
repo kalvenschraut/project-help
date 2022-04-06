@@ -16,7 +16,7 @@ import { useRouter } from "vue-router";
 import UserInfoVue from "../components/UserInfo.vue";
 import { addPidgpalToBlockedContacts, getUsrProfileFirestore } from "../firestore";
 import MsgCompose from "../components/MsgCompose.vue";
-import MsgDisplay from "./MsgDisplay.vue"; //I dont know why I cant import it like this? Gives an error
+// import MsgDisplay from "./MsgDisplay.vue"; //I dont know why I cant import it like this? Gives an error
 import MsgDisplayVue from "../components/MsgDisplay.vue"; 
 
 const router = useRouter();
