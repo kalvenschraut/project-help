@@ -1,5 +1,5 @@
 <template>
-  <UserInfoVue :pic="pic" :display-name="dname" @getout="logOut"></UserInfoVue>
+  <UserInfoVue :pic="pic" :display-name="dName" @getout="logOut"></UserInfoVue>
   <button class="btn btn-success" @click="logOut">Logout</button>
 
   <button v-if="!isAddPidgpal" @click="isAddPidgpal = true">Add Pidgpal</button>
@@ -9,7 +9,7 @@
     @pidgpalchosen="addPidgpal"
     @shutitdown="isAddPidgpal = false"
   ></AddPidgpalVue>
-  <h3>global state : {{ gstate.global.loggedInUserProfile }}</h3>
+  <h3>global state : {{ gState.global.loggedInUserProfile }}</h3>
   <h3>Pidpals : {{ pidgPals }}</h3>
   <h4>palFromPairs : {{ palFromPairs }}</h4>
   <h4>msgPairIdPerContact : {{ msgPairIdPerContact }}</h4>
@@ -29,8 +29,7 @@
           individualPal.pic,
           individualPal.status,
           individualPal.pairID
-        )
-      "
+        )"
     ></PidgpalCardVue>
   </ol>
 </template>
@@ -51,31 +50,30 @@ import {
   getUserProfilePic,
 } from "../firestore";
 
-const gstate: any = inject("global");
+const gState: any = inject("global");
 const router = useRouter();
 const isAddPidgpal = ref(false);
-const uid = gstate.global.loggedInUserProfile.uid;
-const pic = gstate.global.loggedInUserProfile.photoURL;
-const uname: string = gstate.global.loggedInUserProfile.userName;
-const dname = gstate.global.loggedInUserProfile.displayName
-  ? gstate.global.loggedInUserProfile.displayName
-  : gstate.global.loggedInUserProfile.userName;
-const userContacts = computed(() => gstate.global.loggedInUserProfile.ppContacts);
-const blockedContacts = computed(() => gstate.global.loggedInUserProfile.ppBlocked);
-const statusGrid = computed(() => gstate.global.statusGrid.value);
+const uid = gState.global.loggedInUserProfile.uid;
+const pic = gState.global.loggedInUserProfile.photoURL;
+const uName: string = gState.global.loggedInUserProfile.userName;
+const dName = gState.global.loggedInUserProfile.displayName
+  ? gState.global.loggedInUserProfile.displayName
+  : gState.global.loggedInUserProfile.userName;
+const userContacts = computed(() => gState.global.loggedInUserProfile.ppContacts);
+const blockedContacts = computed(() => gState.global.loggedInUserProfile.ppBlocked);
+const statusGrid = computed(() => gState.global.statusGrid.value);
 
 const cleanupHandleASC = onAuthStateChanged(auth, handleAuthStateChange);
 onBeforeUnmount(cleanupHandleASC);
 
-const { foundPairs: pidgPals } = usePidgPalListener(uname);
+const { foundPairs: pidgPals } = usePidgPalListener(uName);
 
-//this is a test to see how to commit
 //get the pals name from palpairs
 const palFromPairs = computed(() =>
   pidgPals.value.map((doc) => {
     return {
       id: doc.id,
-      pal: doc.pal1 != uname ? doc.pal1 : doc.pal2,
+      pal: doc.pal1 != uName ? doc.pal1 : doc.pal2,
     };
   })
 );
@@ -105,7 +103,7 @@ const contactGrid: any[] = computed(async () => {
       const gotStatus = await getLastMsgStatusfromMsgsCollection(
         pair.id,
         pair.pal,
-        gstate.global.loggedInUserProfile.userName
+        gState.global.loggedInUserProfile.userName
       ).catch((e) => console.log(e));
 
       cttGrid.push({
@@ -120,10 +118,11 @@ const contactGrid: any[] = computed(async () => {
         status: "notStarted",
         pic: gotPic,
         pairID: pair.id,
+        
       });
     }
   }
-  gstate.global.updateStatusGrid(cttGrid);
+  gState.global.updateStatusGrid(cttGrid);
 });
 
 //watch the pairs collection. add any new pairs to my contacts
@@ -152,11 +151,11 @@ async function updateGstateUserProfile() {
   //get the latest user profile from firebase
   const userProfileData = await getUsrProfileFirestore(uid).catch((e) => console.log(e));
   //update the global variable
-  gstate.global.updateUsrGlobalState({ uid: uid, ...userProfileData });
+  gState.global.updateUsrGlobalState({ uid: uid, ...userProfileData });
 }
 
 const goToSpotlight = (pal: string, pic: string, status: string, pairID: string) => {
-  gstate.global.updateGlobalPpSpotlight({
+  gState.global.updateGlobalPpSpotlight({
     palpic: pic,
     status: status,
     pairID: pairID,

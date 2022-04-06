@@ -2,7 +2,7 @@
   <p>gotMessages: {{ gotMessages }}</p>
 
   <ul v-for="item of gotMessages">
-    <h4 style="color: blue" v-if="item.sender === palname">
+    <h4 style="color: blue" v-if="item.sender === palName">
       {{ item.msgText }}
     </h4>
     <h5 style="color: red" v-if="item.sender === myUsrName">
@@ -11,22 +11,31 @@
   </ul>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import { getMessagesfromMessagesCollection } from "../firestore";
 
-const gstate: any = inject("global");
-const myUsrName: string = gstate.global.loggedInUserProfile.userName;
-const palname: string = gstate.global.globalPpSpotlight.palname;
-const palstatus: any = computed(() => gstate.global.globalPpSpotlight.status);
-const palpairid: any = computed(() => gstate.global.globalPpSpotlight.pairID);
+const gState: any = inject("global");
+const myUsrName: string = gState.global.loggedInUserProfile.userName;
+const palName: string = gState.global.globalPpSpotlight.palname;
+const palStatus: any = computed(() => gState.global.globalPpSpotlight.status);
+const palPairId: any = computed(() => gState.global.globalPpSpotlight.pairID);
 
 const gotMessages = ref([]);
 
-getMessages();
-defineExpose({ getMessages }); //so msgcompose can trigger after send
+const props = defineProps(['updateMessages']);
+const emits = defineEmits(['update:updateMessages']);
 
-async function getMessages() {
-  const result = await getMessagesfromMessagesCollection(palpairid.value).catch((err) =>
+//so msgdisplay refreshes after send in msgcompose
+watch(()=>props.updateMessages,()=>{
+  if (props.updateMessages) {
+    getMessages();
+    emits("update:updateMessages", false);
+  }
+})
+getMessages(); //to fetch messages on first load
+
+async function getMessages(): Promise<void> {
+  const result = await getMessagesfromMessagesCollection(palPairId.value).catch((err) =>
     console.log(err)
   );
   if (result) {
@@ -35,9 +44,9 @@ async function getMessages() {
       // if transit and last msg sender not me dont display
       if (index == length - 1) {
         if (
-          palstatus.value === "home" ||
-          palstatus.value === "away" ||
-          (palstatus.value === "transit" && singlemsg.sender === myUsrName)
+          palStatus.value === "home" ||
+          palStatus.value === "away" ||
+          (palStatus.value === "transit" && singlemsg.sender === myUsrName)
         ) {
           return singlemsg;
         } else {

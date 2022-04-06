@@ -6,35 +6,27 @@
     title="Send a message"
   />
   <button @click="sendMessage">Send Message</button>
-  <h6>Your current status is : {{ palstatus }}</h6>
-  <MsgDisplay ref="MsgDisplayVueRef" />
+  <h6>Your current status is : {{ palStatus }}</h6>
 </template>
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
 import { addMsgToExisting, addMsgToNew, addPair2PpCollection } from "../firestore";
-import MsgDisplay from "./MsgDisplay.vue";
 
-const gstate: any = inject("global");
-const myUsrName: string = gstate.global.loggedInUserProfile.userName;
+const gState: any = inject("global");
+const myUsrName: string = gState.global.loggedInUserProfile.userName;
 
 //globalPpSpotlight is for the pal that was clicked
-const palname: string = gstate.global.globalPpSpotlight.palname;
-const palpic: string = gstate.global.globalPpSpotlight.palpic;
-const palstatus: any = computed(() => gstate.global.globalPpSpotlight.status);
-const palpairid: any = computed(() => gstate.global.globalPpSpotlight.pairID);
+const palName: string = gState.global.globalPpSpotlight.palname;
+const palPic: string = gState.global.globalPpSpotlight.palpic;
+const palStatus: any = computed(() => gState.global.globalPpSpotlight.status);
+const palPairId: any = computed(() => gState.global.globalPpSpotlight.pairID);
 
 const msgTxtInput = ref("");
+const emits = defineEmits<{ (e: "newMsgSent"): void }>();
 
-const MsgDisplayVueRef = ref();
-
-//for messages to refresh in msgdisplay component
-function syncMsgs() {
-  MsgDisplayVueRef.value.getMessages();
-}
-
-//if a msg has never been sent then create a pairid id the pidgpals collection
+//if a msg has never been sent then create a pairid in the pidgpals collection
 async function sendMessage() {
-  if (palstatus.value === "notStarted") {
+  if (palStatus.value === "notStarted") {
     //create pair id
     const newPairID = await createPidpalPair();
     //save message
@@ -47,17 +39,17 @@ async function sendMessage() {
     );
     //update to transit so new message cannot be sent
     //and new pairid so messages can be retrieved
-    gstate.global.updateGlobalPpSpotlight({
-      palpic: palpic,
+    gState.global.updateGlobalPpSpotlight({
+      palpic: palPic,
       status: "transit",
       pairID: newPairID,
-      palname: palname,
+      palname: palName,
     });
-    syncMsgs();
+    emits("newMsgSent");
     msgTxtInput.value = "";
-  } else if (palstatus.value === "home") {
+  } else if (palStatus.value === "home") {
     //get pair id
-    const existingPairID = palpairid.value;
+    const existingPairID = palPairId.value;
     //save message
     await saveExistingMsg(
       {
@@ -67,13 +59,13 @@ async function sendMessage() {
       existingPairID
     );
     //update to transit so new message cannot be sent
-    gstate.global.updateGlobalPpSpotlight({
-      palpic: palpic,
+    gState.global.updateGlobalPpSpotlight({
+      palpic: palPic,
       status: "transit",
       pairID: existingPairID,
-      palname: palname,
+      palname: palName,
     });
-    syncMsgs();
+    emits("newMsgSent");
     msgTxtInput.value = "";
   } else {
     alert("You must wait until the pigeon is home");
@@ -81,7 +73,7 @@ async function sendMessage() {
 }
 
 async function createPidpalPair() {
-  const newPairID = await addPair2PpCollection(myUsrName, palname);
+  const newPairID = await addPair2PpCollection(myUsrName, palName);
   return newPairID;
 }
 
